@@ -1,0 +1,7 @@
+numpy==1.24.3               # For matrix operations and numerical computations
+matplotlib==3.7.1           # For visualizing activations, weights, and metrics
+scipy==1.10.1               # For optimization and numerical functions
+pandas==1.5.3               # For logging and tracking data
+tqdm==4.65.0                # For progress bars during training
+opencv-python==4.7.0.72     # For image processing (optional, but useful)
+cupy-cuda118                # Replace '12x' with your CUDA version
