@@ -1,7 +1,7 @@
 import numpy as np
 
 class Conv2D:
-    def __init__(self, in_channels,out_channels,kernel_size, stride=1, padding=0, activation='relu'):
+    def __init__(self, in_channels,out_channels,kernel_size, stride=1, padding=0, activation='relu',learning_rate=0.01):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -9,6 +9,8 @@ class Conv2D:
         self.padding = padding
         if activation == 'relu':
             self.activation = activation
+        self.learning_rate = learning_rate    
+        
             
         # Xavier initialization
         self.weights = np.random.randn(out_channels,in_channels,kernel_size,kernel_size)* np.sqrt(1./(in_channels*kernel_size*kernel_size))
@@ -45,6 +47,37 @@ class Conv2D:
             return self.output
             
         
-        #def backwards(self, input):
+        def backwards(self, d_out):
+            batch_size, _ , out_height,out_width = d_out.shape
+            _,_,input_height,input_width = self.input.shape
             
+            # Gradient of ReLU
+            d_out[self.output <=0 ]=0
+            
+            x_padded = self.pad_input(self.input)
+            d_x = np.zeros_like(x_padded)
+            d_w = np.zeros_like(self.weights)
+            d_b = np.zeros_like(self.biases)
+            
+            for b in range(batch_size):
+                for oc in range(self.output_channels):
+                    for i in range(out_height):
+                        for j in range(out_width):
+                            h_start = i*self.stride
+                            h_end = h_start+self.kernel_size
+                            w_start = j* self.stride
+                            w_end = w_start+ self.kernel_size
+                            
+                            d_w[oc] +=x_padded[b,:,h_start:h_end,w_start:w_end]*d_out[b,oc,i,j]
+                            
+                            d_x[b,:,h_start:h_end,w_start:w_end] += self.weights[oc]*d_out[b,oc,i,j]
+                            d_b[oc] += d_out[b,oc,i,j]
+                            
+            if self.padding>0:
+                d_x = d_x[:, :, self.padding:-self.padding, self.padding:-self.padding]
 
+            # update weights and biases
+            self.weights -= learning_rate*d_w
+            self.biases -= learning_rate*d_b
+            
+            return d_x
