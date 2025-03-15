@@ -1,7 +1,7 @@
 import numpy as np
 
 class Conv2D:
-    def __init__(self, in_channels,out_channels,kernel_size, stride=1, padding=0, activation='relu',learning_rate=0.01):
+    def __init__(self, in_channels,out_channels,kernel_size,learning_rate=0.01, stride=1, padding=0,activation='relu'):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -13,7 +13,13 @@ class Conv2D:
         
                 
         # Xavier initialization
-        self.weights = np.random.randn(out_channels,in_channels,kernel_size,kernel_size)* np.sqrt(1./(in_channels*kernel_size*kernel_size))
+        # Xavier Initialization
+        fan_in = in_channels * kernel_size * kernel_size
+        fan_out = out_channels * kernel_size * kernel_size
+        limit = np.sqrt(2 / (fan_in + fan_out))
+
+        self.weights = np.random.uniform(-limit, limit, 
+                                         (out_channels, in_channels, kernel_size, kernel_size))
         self.biases = np.zeros((out_channels,1))
         
     def pad_input(self,x):
