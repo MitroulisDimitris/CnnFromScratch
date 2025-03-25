@@ -1,7 +1,7 @@
 import numpy as np
 
 class MaxPool:
-    def __init__(self, kernel_size, stride, padding):
+    def __init__(self, kernel_size, stride, padding=0):
         self.kernel_size = kernel_size  # pooling window size
         self.stride = stride            # step size between windows
         self.padding = padding          # number of zero-padding layers

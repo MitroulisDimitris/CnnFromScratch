@@ -10,19 +10,18 @@ class ReLU:
         dx[self.x <= 0] = 0
         return dx
     
+
 class SoftMax:
     def __init__(self):
         self.output = None
-        
-    
-    def forward(self,x):
-        # prevent numerical instability by substracting the max value in each row
-        x_exp = np.exp(x-np,max(x,axix=1,keepdimg=True))
-        self.output = x_exp / np.sum(x_exp,axis=1,keepdims=True)
-        
+          
+    def forward(self, x):
+        # Prevent numerical instability by subtracting the max value in each row
+        x_exp = np.exp(x - np.max(x, axis=1, keepdims=True))
+        self.output = x_exp / np.sum(x_exp, axis=1, keepdims=True)
         return self.output
     
-    def backwards(self,dout):
+    def backward(self, dout):
         batch_size, num_classes = self.output.shape
         dx = np.zeros_like(self.output)
 
@@ -35,45 +34,31 @@ class SoftMax:
             dx[i] = np.dot(jacobian, dout[i])
 
         return dx
-    
-    
-    
  
-
 class Dropout:
-    def __init__(self, dropout_rate=0.5):
-        assert 0 <= dropout_rate < 1, "Dropout rate must be between 0 and 1."
+    def __init__(self, dropout_rate=0.2):
         self.dropout_rate = dropout_rate
         self.mask = None
 
     def forward(self, x, training=True):
-        """
-        Forward pass of Dropout.
-
-        Parameters:
-            x (np.ndarray): Input array of shape (batch_size, input_dim).
-            training (bool): Whether the model is in training mode.
-
-        Returns:
-            np.ndarray: Output after applying dropout.
-        """
         if training:
-            # Create dropout mask: Keep neurons with probability (1 - dropout_rate)
-            self.mask = (np.random.rand(*x.shape) > self.dropout_rate).astype(x.dtype)
-            return (x * self.mask) / (1.0 - self.dropout_rate)  # Scale during training
-        else:
-            return x  # No dropout during inference
+            self.mask = (np.random.rand(*x.shape) > self.dropout_rate).astype(x.dtype) / (1.0 - self.dropout_rate)
+            return x * self.mask
+        return x  # No dropout during inference
 
     def backward(self, dout):
-        """
-        Backward pass of Dropout.
+        if self.mask is None:
+            raise ValueError("Dropout mask was not set. Ensure forward pass is called before backward.")
+        return dout * self.mask  # Ensure shapes match correctly
 
-        Parameters:
-            dout (np.ndarray): Gradient of the loss with respect to the output.
-
-        Returns:
-            np.ndarray: Gradient with respect to the input.
-        """
-        return dout * self.mask / (1.0 - self.dropout_rate)  # Scale the gradients
-
+class Flatten:
+    def __init__(self):
+        self.input_shape = None
         
+    def forward(self, x, training=True):
+        self.input_shape = x.shape
+        return x.reshape(x.shape[0], -1)
+    
+    def backward(self, grad_output):
+        # Reshape grad_output to the original input shape and return it.
+        return grad_output.reshape(self.input_shape)
